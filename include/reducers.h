@@ -44,7 +44,7 @@
  the fuzzer; the test program does not need it.
 */
 
-enum fuzzfactory_reducer_id {
+enum fuzzfactory_reducer {
   FUZZFACTORY_REDUCER_MAX,
   FUZZFACTORY_REDUCER_LOG_BUCKET,
   FUZZFACTORY_REDUCER_BIT_UNION,

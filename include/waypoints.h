@@ -81,7 +81,7 @@ typedef struct dsf_config_t {
 } dsf_config;
 
 /* Register a new domain-specific fuzzing front-end */
-dsf_t __fuzzfactory_new_domain(u32 size, enum fuzzfactory_reducer_id reducer);
+dsf_t __fuzzfactory_new_domain(u32 size, enum fuzzfactory_reducer reducer);
 
 #define FUZZFACTORY_DSF_NEW(name, size, reducer) dsf_t name; \
   __attribute__((constructor(0))) static void __init_##name() { \

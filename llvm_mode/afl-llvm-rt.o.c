@@ -320,7 +320,7 @@ void __sanitizer_cov_trace_pc_guard_init(uint32_t* start, uint32_t* stop) {
 
 }
 
-int __fuzzfactory_new_domain(u32 size, enum fuzzfactory_reducer_id reducer) {
+int __fuzzfactory_new_domain(u32 size, enum fuzzfactory_reducer reducer) {
   // Enusre that we have space
   if (dsf_count == DSF_MAX) {
     fprintf(stderr, "[-] ERROR: Too many domain-specific maps! Max allowed is %d only.\n", DSF_MAX);
