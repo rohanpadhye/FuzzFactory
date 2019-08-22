@@ -78,14 +78,15 @@ typedef struct dsf_config_t {
   int start;
   int end;
   int reducer;
+  u32 initial;
 } dsf_config;
 
 /* Register a new domain-specific fuzzing front-end */
-dsf_t __fuzzfactory_new_domain(u32 size, enum fuzzfactory_reducer reducer);
+dsf_t __fuzzfactory_new_domain(u32 size, enum fuzzfactory_reducer reducer, u32 initial);
 
-#define FUZZFACTORY_DSF_NEW(name, size, reducer) dsf_t name; \
+#define FUZZFACTORY_DSF_NEW(name, size, reducer, initial) dsf_t name; \
   __attribute__((constructor(0))) static void __init_##name() { \
-  name = __fuzzfactory_new_domain(size, reducer); \
+  name = __fuzzfactory_new_domain(size, reducer, initial); \
 } \
 
 #else // Not compiling with AFL

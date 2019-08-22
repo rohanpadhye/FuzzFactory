@@ -320,7 +320,7 @@ void __sanitizer_cov_trace_pc_guard_init(uint32_t* start, uint32_t* stop) {
 
 }
 
-int __fuzzfactory_new_domain(u32 size, enum fuzzfactory_reducer reducer) {
+int __fuzzfactory_new_domain(u32 size, enum fuzzfactory_reducer reducer, u32 initial) {
   // Enusre that we have space
   if (dsf_count == DSF_MAX) {
     fprintf(stderr, "[-] ERROR: Too many domain-specific maps! Max allowed is %d only.\n", DSF_MAX);
@@ -339,6 +339,7 @@ int __fuzzfactory_new_domain(u32 size, enum fuzzfactory_reducer reducer) {
   dsf_configs[dsf_count].start = start; 
   dsf_configs[dsf_count].end = end;
   dsf_configs[dsf_count].reducer = reducer;
+  dsf_configs[dsf_count].initial = initial;
 
   // Increment the number of DSF maps registered and return old value
   return dsf_count++;

@@ -1509,9 +1509,18 @@ EXP_ST void setup_shm(void) {
 
 }
 
-/* set the cumulated DSF map to 0 */
+/* set the cumulated DSF map to the provided initial value */
 EXP_ST void setup_dsf_cumulated() {
-  memset(dsf_cumulated, 0, dsf_len_actual * sizeof(u32));
+  for (int i = 0; i < dsf_count; i++) {
+    int dsf_start = dsf_configs[i].start;
+    int dsf_end = dsf_configs[i].end;
+    u32 dsf_initial = dsf_configs[i].initial;
+    for (int j = dsf_start; j < dsf_end; j++) {
+      dsf_cumulated[j] = dsf_initial;
+    }
+  }
+
+  // memset(dsf_cumulated, 0, dsf_len_actual * sizeof(u32));
 }
 
 
@@ -2287,7 +2296,8 @@ EXP_ST void init_forkserver(char** argv) {
         int start = dsf_configs[j].start;
         int end = dsf_configs[j].end;
         int reducer = dsf_configs[j].reducer;
-        SAYF("DSF %d: Start=0x%06x, End=0x%06x, Size=%d, Reducer[%d]=%p\n", j, start, end, end-start, reducer, dsf_reducers[reducer]);
+        int initial = dsf_configs[j].initial;
+        SAYF("DSF %d: Start=0x%06x, End=0x%06x, Size=%d, Reducer[%d]=%p, Initial=%d\n", j, start, end, end-start, reducer, dsf_reducers[reducer], initial);
         dsf_len_actual = end;
       }
       SAYF("Total DSF map length = %d\n", dsf_len_actual);
@@ -3083,8 +3093,8 @@ static void perform_dry_run(char** argv) {
       DEBUG("# DSF map %d\n", j);
       dsf_config* dsf = &dsf_configs[j];
       for (u32 k=dsf->start; k < dsf->end; k++){
-        // if there is a non-zero score at this index.. 
-        if (dsf_cumulated[k]){
+        // if there is a non-initial score at this index...
+        if (dsf_cumulated[k] != dsf->initial){
             DEBUG("At key 0x%06x, val is %d (hex=0x%08x)\n", k, dsf_cumulated[k], dsf_cumulated[k]);
         }
       }
