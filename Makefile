@@ -112,7 +112,7 @@ test_build: afl-gcc afl-as afl-showmap
 endif
 
 all_done: test_build
-	@if [ ! "`which clang 2>/dev/null`" = "" ]; then echo "[+] LLVM users: see llvm_mode/README.llvm for a faster alternative to afl-gcc."; fi
+	@if [ ! "`which clang 2>/dev/null`" = "" -a ! -x "afl-clang-fast" ]; then echo "[+] LLVM users: see llvm_mode/README.llvm for a faster alternative to afl-gcc."; fi
 	@echo "[+] All done! Be sure to review README - it's pretty short and useful."
 	@if [ "`uname`" = "Darwin" ]; then printf "\nWARNING: Fuzzing on MacOS X is slow because of the unusually high overhead of\nfork() on this OS. Consider using Linux or *BSD. You can also use VirtualBox\n(virtualbox.org) to put AFL inside a Linux or *BSD VM.\n\n"; fi
 	@! tty <&1 >/dev/null || printf "\033[0;30mNOTE: If you can read this, your terminal probably uses white background.\nThis will make the UI hard to read. See docs/status_screen.txt for advice.\033[0m\n" 2>/dev/null
@@ -120,7 +120,7 @@ all_done: test_build
 .NOTPARALLEL: clean
 
 clean:
-	rm -f $(PROGS) afl-as as afl-g++ afl-clang afl-clang++ *.o *~ a.out core core.[1-9][0-9]* *.stackdump test .test test-instr .test-instr0 .test-instr1 qemu_mode/qemu-2.10.0.tar.bz2 afl-qemu-trace
+	rm -f $(PROGS) afl-as as afl-g++ afl-clang afl-clang++ *.o *~ a.out core core.[1-9][0-9]* *.stackdump test .test test-instr .test-instr0 .test-instr1 qemu_mode/qemu-2.10.0.tar.bz2 afl-qemu-trace *.gch
 	rm -rf out_dir qemu_mode/qemu-2.10.0
 	$(MAKE) -C llvm_mode clean
 	$(MAKE) -C libdislocator clean
@@ -160,3 +160,14 @@ publish: clean
 	cat docs/ChangeLog >~/www/afl/ChangeLog.txt
 	cat docs/QuickStartGuide.txt >~/www/afl/QuickStartGuide.txt
 	echo -n "$(VERSION)" >~/www/afl/version.txt
+
+# FuzzFactory LLVM-based domains
+DOMAINS ?= slow perf mem cmp valid diff
+.PHONY: fuzzfactory-domains
+.PHONY: $(DOMAINS)
+
+llvm-domains: $(DOMAINS)
+	make -C llvm_mode
+
+$(DOMAINS):
+	make -C llvm_mode ../waypoints-$@-rt.o ../waypoints-$@-pass.so

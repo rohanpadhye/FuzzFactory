@@ -15,36 +15,38 @@ FuzzFactory exposes an API (see `include/waypoints.h`) between the fuzzing algor
 
 ## Documentation and Examples
 
-
-
 This section assumes some familiarity with AFL. 
 
-To build FuzzFactory's custom `afl-fuzz`, run `make` in the root project directory.
+To build FuzzFactory's custom `afl-fuzz`, run `make` in the root project directory. 
+
+You can use this `afl-fuzz` to fuzz regular AFL-instrumented programs as before.
+
+You can also use this `afl-fuzz` with the `-p` option to enable fuzzing programs that are instrumented or modified to call into FuzzFactory's API.
 
 
 ### LLVM-based instrumentation
 
-To build FuzzFactory's custom `afl-clang-fast`, run `make` in the `llvm` directory.
+To build FuzzFactory's LLVM-based domain-specific instrumentation, run `make llvm-domains` in the root project directory. This will build a special version of `afl-clang-fast` that supports domain-specific instrumentation passes as plugins. This command also builds six domain-specific instrumentation passes that ship with FuzzFactory; these correspond to the six domains listed in the paper: `slow`, `perf`, `mem`, `valid`, `cmp`, `diff`.
 
 FuzzFactory provides an extension mechanism to quickly implement LLVM instrumentation passes that call into the FuzzFactory API; see `llvm_mode/fuzzfactory.hpp` and the following six domain implementations in `llvm_mode`:
 
-- Domain `slow`:
+- Domain `slow` (inspired by [SlowFuzz](https://doi.org/10.1145/3133956.3134073)):
   -  `waypoints-slow-pass.cc`: Implements domain `slow` described in Table 3 of the paper.
   -  `waypoints-slow-rt.c`: Allocates DSF map for `slow`.
-- Domain `perf`:
+- Domain `perf` (port of [PerfFuzz](https://doi.org/10.1145/3213846.3213874)):
   -  `waypoints-perf-pass.cc`: Implements domain `perf` described in Table 4 of the paper.
   -  `waypoints-perf-rt.c`: Allocates DSF map for `perf`.
-- Domain `mem`:
+- Domain `mem` (malloc/calloc fuzzer):
   -  `waypoints-mem-pass.cc`: Implements domain `mem` described in Table 5 of the paper.
   -  `waypoints-mem-rt.c`: Allocates DSF map for `mem`.
-- Domain `valid`:
+- Domain `valid` (port of [Zest-v](https://doi.org/10.1109/ICSE-Companion.2019.00107)):
   -  `waypoints-valid-pass.cc`: Implements domain `valid` described in Table 6 of the paper.
   -  `waypoints-valid-rt.c`: Allocates DSF map for `slow` and defines the logic for when the argument to `ASSUME()` is `false`.
-- Domain `cmp`:
-  -  `waypoints-cmp-pass.cc`: Implements domain `cmp` described in Table 7.
+- Domain `cmp` (magic-byte and checksum fuzzer):
+  -  `waypoints-cmp-pass.cc`: Implements domain `cmp` described in Table 7 in the paper.
   -  `waypoints-cmp-rt.c`: Allocates DSF map for `cmp`, as well as defines all the `wrapcmp` functions that perform the common-bit-counting and update the DSF map accordingly. 
-- Domain `diff`:
-  -  `waypoints-diff-pass.cc`: Implements domain `diff` described in Table 7. 
+- Domain `diff` (incremental fuzzer):
+  -  `waypoints-diff-pass.cc`: Implements domain `diff` described in Table 8 in the paper. 
   -  `waypoints-diff-rt.c`: Allocates globals used by domain `diff`.
 
 
@@ -96,7 +98,7 @@ The rest of the fuzzing session is similar to running [AFL as usual](http://lcam
 
 ### New Domains via LLVM Instrumentation
 
-To implement your own domain-specific instrumentation, let's call it domain `foo`, create files `waypoints-foo-pass.cc` and `waypoints-diff-rt.c`, and run `make` in the `llvm_mode` directory. Use the implementations listed above as templates. Once compiled, you can then instrument your test programs using the environment variable `WAYPOINTS=foo` when compiling with the `afl-clang-fast` built from this repo.
+To implement your own domain-specific instrumentation pass, let's call it domain `foo`: (1) create files `waypoints-foo-pass.cc` and `waypoints-foo-rt.c` in the `llvm_mode` directory, (2) run `make llvm-domains DOMAINS+=foo` in the root directory, (3) compile your test programs with `afl-clang-fast` after setting the environment var `WAYPOINTS=foo`. For help in creating the pass and runtime files, use the implementations listed in the previous section as templates. 
 
 ### New Domains via Manual API Invocation
 

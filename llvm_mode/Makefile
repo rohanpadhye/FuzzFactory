@@ -60,13 +60,6 @@ else
   PROGS      = ../afl-clang-fast ../afl-llvm-rt.o ../afl-llvm-rt-32.o ../afl-llvm-rt-64.o
 endif
 
-PROGS += ../waypoints-perf-pass.so ../waypoints-slow-pass.so 
-PROGS += ../waypoints-mem-pass.so ../waypoints-perf-rt.o 
-PROGS += ../waypoints-slow-rt.o ../waypoints-mem-rt.o 
-PROGS += ../waypoints-valid-rt.o ../waypoints-valid-pass.so
-PROGS += ../waypoints-cmp-pass.so ../waypoints-cmp-rt.o 
-PROGS += ../waypoints-diff-pass.so ../waypoints-diff-rt.o 
-
 CFLAGS += -I../include
 
 all: test_deps $(PROGS) test_build all_done
@@ -108,7 +101,7 @@ endif
 ../waypoints-%-pass.so: waypoints-%-pass.cc fuzzfactory.hpp
 	$(CXX) $(CLANG_CFL) -shared $< -o $@ $(CLANG_LFL)
 
-../waypoints-%-rt.o: waypoints-%-rt.c | test_deps
+../waypoints-%-rt.o: waypoints-%-rt.c
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 
 
