@@ -1,8 +1,11 @@
 # FuzzFactory: Domain-Specific Fuzzing with Waypoints
 
+![FuzzFactory logo](https://github.com/rohanpadhye/FuzzFactory/blob/master/img/logo_small.png)
+
 FuzzFactory is an extension of [AFL](https://github.com/google/AFL) that generalizes coverage-guided fuzzing to domain-specific testing goals. FuzzFactory allows users to guide the fuzzer's search process without having to modify anything in AFL's search algorithm.
 
-A paper on FuzzFactory has been [accepted to OOPSLA 2019](https://2019.splashcon.org/details/splash-2019-oopsla/57/FuzzFactory-Domain-Specific-Fuzzing-with-Waypoints). A replication package for the experimental evaluation described in the paper is available at: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3364086.svg)](https://doi.org/10.5281/zenodo.3364086).
+A paper on FuzzFactory has been [accepted to OOPSLA 2019](https://2019.splashcon.org/details/splash-2019-oopsla/57/FuzzFactory-Domain-Specific-Fuzzing-with-Waypoints). FuzzFactory has been developed by [Rohan Padhye](https://cs.berkeley.edu/~rohanpadhye) and [Caroline Lemieux](https://www.carolemieux.com).
+A replication package for the experimental evaluation described in the paper is available at: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3364086.svg)](https://doi.org/10.5281/zenodo.3364086).
 
 ## What are *Waypoints*?
 
