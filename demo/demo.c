@@ -25,16 +25,6 @@ void* Test(int a, int b) {
 int main(int argc, char** argv) {
 
   // Read 2 integers from input
-  /*
-  char str_a[12] = {0};
-  char str_b[12] = {0};
-  fgets(str_a, 12, stdin);
-  fgets(str_b, 12, stdin);
-
-  int a = atoi(str_a);
-  int b = atoi(str_b);
-  */
-
   int arr[2];
   fread(arr, sizeof(arr), 2, stdin);
   int a = arr[0];
