@@ -64,22 +64,22 @@ cd demo
 Background: This is how you would compile `demo.c` with regular AFL:
 
 ```
-../afl/afl-clang-fast demo.c -o demo
+../afl-clang-fast demo.c -o demo
 ```
 
 This is how you would compile `demo.c` with FuzzFactory using the `mem` domain:
 ```
-WAYPOINTS=mem ../fuzzfactory/afl-clang-fast demo.c -o demo
+WAYPOINTS=mem ../afl-clang-fast demo.c -o demo
 ```
 
 This is how you would compile `demo.c` with FuzzFactory using the `cmp` domain:
 ```
-WAYPOINTS=cmp ../fuzzfactory/afl-clang-fast demo.c -o demo
+WAYPOINTS=cmp ../afl-clang-fast demo.c -o demo
 ```
 
 This is how you would compile `demo.c` with FuzzFactory using the composition of the `cmp` and `mem` domain:
 ```
-WAYPOINTS=cmp,mem ../fuzzfactory/afl-clang-fast demo.c -o demo
+WAYPOINTS=cmp,mem ../afl-clang-fast demo.c -o demo
 ```
 
 Now, let's fuzz the demo program using the seed file in the `seeds` subdirectory. The same command applies regardless of what domain was used to instrument the test program:
