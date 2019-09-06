@@ -105,7 +105,46 @@ To implement your own domain-specific instrumentation pass, let's call it domain
 
 ### New Domains via Manual API Invocation
 
-*Documentation coming soon*
+FuzzFactory can also be used to manually augment a test program and specify domain-specific testing goals. Simply include `waypoints.h` and use the following macros from your test program:
 
+```
+/** 
+ * Creates a new DSF map `name` with `size` keys, `reducer` function, and `initial` aggregate value.
+ *
+ * To be called at the top-level global scope.
+ */
+FUZZFACTORY_DSF_NEW(name, size, reducer, initial)
 
+/** Set dsf[k] = max(dsf[k], v); */
+FUZZFACTORY_DSF_MAX(dsf, k, v)
+
+/** Set dsf[k] = dsf[k] | v; */
+FUZZFACTORY_DSF_BIT(dsf, k, v)
+
+/** Set dsf[k] = v; */
+FUZZFACTORY_DSF_SET(dsf, k, v)
+
+/** Set dsf[k] = dsf[k] + v; */
+FUZZFACTORY_DSF_INC(dsf, k, v)
+```
+
+To see a sample usage of these macros from a test program, cd to the `demo` directory and run the following:
+
+```
+diff demo.c demo-manual.c    # Compare demo program with fuzzfactory-macro augmented test program
+```
+
+Compile the augmented test program as follows:
+
+```
+../afl-clang-fast demo-manual.c -o demo-manual
+```
+
+Fuzz the augmented test program using the `-p` option to enable domain-specific fuzzing:
+
+```
+../afl-fuzz -p -i seeds/ -o results ./demo-manual
+```
+
+Fuzzing the augmented program will be similar to fuzzing the original demo program with waypoints `cmp` and `mem` enabled.
 
