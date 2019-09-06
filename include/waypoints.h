@@ -98,7 +98,7 @@ dsf_t __fuzzfactory_new_domain(u32 size, enum fuzzfactory_reducer reducer, u32 i
 #define FUZZFACTORY_DSF_BIT(id, k, v)
 #define FUZZFACTORY_DSF_SET(id, k, v)
 #define FUZZFACTORY_DSF_INC(id, k, v)
-#define FUZZFACTORY_DSF_NEW(size, reducer)
+#define FUZZFACTORY_DSF_NEW(name, size, reducer, initial)
 
 #endif // __AFL_COMPILER || AFL_PATH
 
