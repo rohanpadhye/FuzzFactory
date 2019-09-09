@@ -29,7 +29,7 @@ You can also use this `afl-fuzz` with the `-p` option to enable fuzzing programs
 
 ### LLVM-based instrumentation
 
-To build FuzzFactory's LLVM-based domain-specific instrumentation, run `make llvm-domains` in the root project directory. This will build a special version of `afl-clang-fast` that supports domain-specific instrumentation passes as plugins. This command also builds six domain-specific instrumentation passes that ship with FuzzFactory; these correspond to the six domains listed in the paper: `slow`, `perf`, `mem`, `valid`, `cmp`, `diff`.
+To build FuzzFactory's LLVM-based domain-specific instrumentation, run `make llvm-domains` in the root project directory; you will need LLVM/Clang 6+ installed (AFL needs to find `llvm_config`). This will build a special version of `afl-clang-fast` that supports domain-specific instrumentation passes as plugins. This command also builds six domain-specific instrumentation passes that ship with FuzzFactory; these correspond to the six domains listed in the paper: `slow`, `perf`, `mem`, `valid`, `cmp`, `diff`.
 
 FuzzFactory provides an extension mechanism to quickly implement LLVM instrumentation passes that call into the FuzzFactory API; see `llvm_mode/fuzzfactory.hpp` and the following six domain implementations in `llvm_mode`:
 
@@ -55,6 +55,7 @@ FuzzFactory provides an extension mechanism to quickly implement LLVM instrument
 
 ### Fuzzing with FuzzFactory's LLVM-based domains
 
+This section assumes you have LLVM/Clang installed and have run `make llvm-domains` in the root directory.
 
 The directory `demo` contains a single-file test program (`demo.c`) to illustrate the use of FuzzFactory. Please switch to this directory for the remainder of this section.
 ```
@@ -127,6 +128,10 @@ FUZZFACTORY_DSF_SET(dsf, k, v)
 /** Set dsf[k] = dsf[k] + v; */
 FUZZFACTORY_DSF_INC(dsf, k, v)
 ```
+
+#### Demo with Clang
+
+This section assumes you have LLVM/Clang installed and have run `make llvm-domains` in the root directory.
 
 To see a sample usage of these macros from a test program, cd to the `demo` directory and run the following:
 
