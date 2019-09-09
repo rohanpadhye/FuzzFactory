@@ -86,7 +86,7 @@ WAYPOINTS=cmp,mem ../afl-clang-fast demo.c -o demo
 Now, let's fuzz the demo program using the seed file in the `seeds` subdirectory. The same command applies regardless of what domain was used to instrument the test program:
 
 ```
-../fuzzfactory/afl-fuzz -p -i seeds -o results ./demo
+../afl-fuzz -p -i seeds -o results ./demo
 ```
 
 If you fuzzed a program that has been instrumented with `cmp`+`mem` domains, you will see the following in the AFL output before fuzzing starts:
@@ -151,5 +151,10 @@ Fuzz the augmented test program using the `-p` option to enable domain-specific 
 ../afl-fuzz -p -i seeds/ -o results ./demo-manual
 ```
 
-Fuzzing the augmented program will be similar to fuzzing the original demo program with waypoints `cmp` and `mem` enabled.
+Fuzzing the augmented program will be similar to fuzzing the original demo program with waypoints `cmp` and `mem` enabled. Again, you will see output like:
 
+```
+[+] 1 domain-specific front-end configs received
+DSF 0: Start=0x000000, End=0x010000, Size=4, Cumulator=1
+```
+and the start of the AFL status screen. 
