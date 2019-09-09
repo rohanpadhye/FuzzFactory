@@ -9,7 +9,7 @@ A replication package for the experimental evaluation described in the paper is 
 
 ## What are *Waypoints*?
 
-FuzzFactory's key abstraction is that of waypoints. Waypoints are intermediate inputs that are saved during the fuzzing loop. These inputs need not increase code coverage, but they are saved because they make some sort of domain-specific progress. For example, PerfFuzz saves inputs that increase loop execution counts, a magic-byte fuzzer may save inputs that have partially correct magic bytes, or a directed fuzzer may save inputs that are more likely to exercise a program point of interest.
+FuzzFactory's key abstraction is that of *waypoints*: intermediate inputs that are saved during the fuzzing loop. These inputs need not increase code coverage, but they are saved because they make some sort of domain-specific progress. For example, PerfFuzz saves inputs that increase loop execution counts, a magic-byte fuzzer may save inputs that have partially correct magic bytes, or a directed fuzzer may save inputs that are more likely to exercise a program point of interest.
 
 ## How does FuzzFactory work?
 
@@ -24,10 +24,10 @@ To build FuzzFactory's custom `afl-fuzz`, run `make` in the root project directo
 
 You can use this `afl-fuzz` to fuzz regular AFL-instrumented programs as before.
 
-You can also use this `afl-fuzz` with the `-p` option to enable fuzzing programs that are instrumented or modified to call into FuzzFactory's API.
+You can also use this `afl-fuzz` with the `-p` option to enable fuzzing programs that are instrumented (option 1) or modified (option 2) to call into FuzzFactory's API.
 
 
-### LLVM-based instrumentation
+### Option 1: Domain-Specific Feedback via LLVM-based instrumentation
 
 To build FuzzFactory's LLVM-based domain-specific instrumentation, run `make llvm-domains` in the root project directory; you will need LLVM/Clang 6+ installed (AFL needs to find `llvm_config`). This will build a special version of `afl-clang-fast` that supports domain-specific instrumentation passes as plugins. This command also builds six domain-specific instrumentation passes that ship with FuzzFactory; these correspond to the six domains listed in the paper: `slow`, `perf`, `mem`, `valid`, `cmp`, `diff`.
 
@@ -53,7 +53,7 @@ FuzzFactory provides an extension mechanism to quickly implement LLVM instrument
   -  `waypoints-diff-rt.c`: Allocates globals used by domain `diff`.
 
 
-### Fuzzing with FuzzFactory's LLVM-based domains
+#### Fuzzing with FuzzFactory's LLVM-based domains
 
 This section assumes you have LLVM/Clang installed and have run `make llvm-domains` in the root directory.
 
@@ -100,11 +100,11 @@ This is an indication that the test program has registered two domain-specific f
 
 The rest of the fuzzing session is similar to running [AFL as usual](http://lcamtuf.coredump.cx/afl). Press CTRL+C to stop fuzzing. During fuzzing, the following log file is created with verbose output about domain-specific feedback: `results/fuzzfactory.log`.
 
-### New Domains via LLVM Instrumentation
+#### New Domains via LLVM Instrumentation
 
 To implement your own domain-specific instrumentation pass, let's call it domain `foo`: (1) create files `waypoints-foo-pass.cc` and `waypoints-foo-rt.c` in the `llvm_mode` directory, (2) run `make llvm-domains DOMAINS+=foo` in the root directory, (3) compile your test programs with `afl-clang-fast` after setting the environment var `WAYPOINTS=foo`. For help in creating the pass and runtime files, use the implementations listed in the previous section as templates. 
 
-### New Domains via Manual API Invocation
+### Option 2: Domain-Specific Feedback via Manual API Invocation
 
 FuzzFactory can also be used to manually augment a test program and specify domain-specific testing goals. Simply include `waypoints.h` and use the following macros from your test program:
 
