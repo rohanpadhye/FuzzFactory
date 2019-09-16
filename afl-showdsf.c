@@ -1152,20 +1152,12 @@ int main(int argc, char** argv) {
     for (int i = dsf->start; i < dsf->end; i++){
       u32 cumulated = dsf_cumulated[i];
       if (cumulated != dsf->initial) {
-        printf("%d: %u\n", i, cumulated);
+        printf("%d: %u\n", i, cumulated); // TODO: Print this to out_file
       }
     }
   }
 
-
-  if (!quiet_mode) {
-
-    if (!tcnt) FATAL("No instrumentation detected" cRST);
-    OKF("Captured %u tuples in '%s'." cRST, tcnt, out_file);
-
-  }
-
-  exit(child_crashed * 2 + child_timed_out);
+  return 0;
 
 }
 
