@@ -79,8 +79,7 @@ static s32 out_fd,                    /* Persistent fd for out_file       */
            fsrv_st_fd;                /* Fork server status pipe (read)   */
 
 static s32 forksrv_pid,               /* PID of the fork server           */
-           child_pid = -1,            /* PID of the fuzzed program        */
-           out_dir_fd = -1;           /* FD of the lock file              */
+           child_pid = -1;            /* PID of the fuzzed program        */
 
 static u32 exec_tmout;                /* Exec timeout (ms)                 */
 
@@ -993,7 +992,6 @@ int main(int argc, char** argv) {
 
   s32 opt;
   u8  mem_limit_given = 0, timeout_given = 0, qemu_mode = 0;
-  u32 tcnt = 0;
   char** use_argv;
 
   doc_path = access(DOC_PATH, F_OK) ? "docs" : DOC_PATH;
@@ -1152,7 +1150,7 @@ int main(int argc, char** argv) {
     for (int i = dsf->start; i < dsf->end; i++){
       u32 cumulated = dsf_cumulated[i];
       if (cumulated != dsf->initial) {
-        printf("%d: %u\n", i, cumulated); // TODO: Print this to out_file
+        printf("dsf[%d] = %u\n", i, cumulated); // TODO: Print this to out_file
       }
     }
   }
