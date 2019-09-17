@@ -33,6 +33,7 @@
 #include "waypoints.h"
 #include "alloc-inl.h"
 #include "hash.h"
+#include "assert.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -72,7 +73,7 @@ static u8 *out_file,                  /* Trace output file                 */
           *target_path,               /* Path to target binary             */
           *at_file;                   /* Substitution string for @@        */
 
-static s32 out_fd,                    /* Persistent fd for out_file       */
+static s32 out_fd = -1,                 /* Persistent fd for out_file       */
            dev_urandom_fd = -1,       /* Persistent fd for /dev/urandom   */
            dev_null_fd = -1,          /* Persistent fd for /dev/null      */
            fsrv_ctl_fd,               /* Fork server control pipe (write) */
@@ -326,17 +327,21 @@ static void init_forkserver(char** argv) {
 
     setrlimit(RLIMIT_CORE, &r); /* Ignore errors */
 
-    /* Isolate the process and configure standard descriptors. If out_file is
-       specified, stdin is /dev/null; otherwise, out_fd is cloned instead. */
-
     setsid();
 
-    dup2(dev_null_fd, 1);
-    dup2(dev_null_fd, 2);
+    // The following is true when in_dir is set
+    if (dev_null_fd > 0) {
+      assert(in_dir);
+      dup2(dev_null_fd, 1);
+      dup2(dev_null_fd, 2);
+    }
 
-
-    dup2(out_fd, 0);
-    close(out_fd);
+    // The following is true when in_dir is set
+    if (out_fd > 0) {
+      assert(in_dir);
+      dup2(out_fd, 0);
+      close(out_fd);
+    }
 
 
     /* Set up control and status pipes, close the unneeded original fds. */
@@ -839,9 +844,10 @@ static void usage(u8* argv0) {
 
   SAYF("\n%s [ options ] -- /path/to/target_app [ ... ]\n\n"
 
-       "Required parameters:\n\n"
+       "Optional parameters:\n\n"
 
-       "  -i dir        - directory containing input files \n\n"
+       "  -i dir        - directory containing input files (default: single exec from stdin)\n"
+       "  -o file       - file to write the trace data to (default: write to stdout)\n\n"
 
        "Execution control settings:\n\n"
 
@@ -850,7 +856,6 @@ static void usage(u8* argv0) {
 
        "Other settings:\n\n"
 
-       "  -o file       - file to write the trace data to\n\n"
        "  -q            - sink program's output and don't show messages\n"
        "  -e            - show edge coverage only, ignore hit counts\n"
        "  -c            - allow core dumps\n"
@@ -1115,7 +1120,7 @@ int main(int argc, char** argv) {
 
     }
 
-  if (optind == argc || !in_dir) usage(argv[0]);
+  if (optind == argc) usage(argv[0]);
 
   setup_shm();
   setup_signal_handlers();
@@ -1136,11 +1141,19 @@ int main(int argc, char** argv) {
   else
     use_argv = argv + optind;
 
-  setup_stdio_file();
+  // If reading test cases from a dir, setup a temp file for piping input to target
+  if (in_dir) {
+    setup_stdio_file();
+  }
+
   init_forkserver(use_argv); // We do this early in order to get dsf_len_actual
   setup_dsf_cumulated();
 
-  run_dir(in_dir);
+  if (in_dir) {
+    run_dir(in_dir);
+  } else {
+    run_target();
+  }
   
 
   /* Print out all the cumulated DSF values */
