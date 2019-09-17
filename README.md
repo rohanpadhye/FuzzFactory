@@ -13,7 +13,7 @@ FuzzFactory's key abstraction is that of *waypoints*: intermediate inputs that a
 
 ## How does FuzzFactory work?
 
-FuzzFactory exposes an API (see `include/waypoints.h`) between the fuzzing algorithm and the test program. The test program can provide custom domain-specific feedback from test execution as key-value pairs, and specify how such feedback should be aggregated across multiple inputs. The aggregated feedback is used to decide if a given input should be considered a waypoint. The calls to the API can be injected either by modifying a test program by hand, or by inserting appropriate instrumentation in the test program. 
+FuzzFactory exposes an API (see `include/waypoints.h`) between the fuzzing algorithm and the test program. The test program can provide custom domain-specific feedback from test execution as key-value pairs, and specify how such feedback should be aggregated across multiple inputs by choosing a *reducer function*. The aggregated feedback is used to decide if a given input should be considered a waypoint. The calls to the API can be injected either by modifying a test program by hand, or by inserting appropriate instrumentation in the test program. 
 
 
 ## Documentation and Examples
@@ -158,3 +158,20 @@ Fuzzing the augmented program will be similar to fuzzing the original demo progr
 DSF 0: Start=0x000000, End=0x010000, Size=4, Cumulator=1
 ```
 and the start of the AFL status screen. 
+
+### Analzying domain-specific info from saved inputs
+
+Apart from finding crashes (bugs), we are also often interested in generating inputs that optimize some domain-specific metric. For example, after fuzzing with the `perf` domain, which is an instantiation of [PerfFuzz](https://github.com/carolemieux/perffuzz) in FuzzFactory, we would like to find the maximum loop count across all saved inputs. Either for this purpose, or simply for debugging your domain-specific instrumentation, FuzzFactory provides a utility tool called `afl-showdsf` that analyzes domain-specific feedback from one or more saved inputs.
+
+Run `./afl-showdsf` without any arguments to see its usage. 
+
+**Replaying Single Input**: Run `afl-showdsf` followed by the command for running the test program along with its input, to see DSF from a single execution. From the `demo` directory referenced in the previous sections, run:
+```
+../afl-showdsf ./demo < seeds/zerozero.txt 
+```
+
+**Aggregation Across Inputs**: Run `afl-showdsf` with `-i <dir>` to execute all inputs in a directory and aggregate their domain-specific feedback using the reducer function that is registered with each domain (e.g. `MAX` for domain `perf`). From the `demo` directory, after fuzzing with `-p` for a while, run:
+```
+../afl-showdsf -i results/queue/ -- ./demo
+```
+

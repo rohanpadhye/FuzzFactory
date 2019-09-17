@@ -17,5 +17,6 @@ afl-g++
 afl-gcc
 afl-gotcpu
 afl-showmap
+afl-showdsf
 afl-tmin
 as
