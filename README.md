@@ -4,8 +4,11 @@
 
 FuzzFactory is an extension of [AFL](https://github.com/google/AFL) that generalizes coverage-guided fuzzing to domain-specific testing goals. FuzzFactory allows users to guide the fuzzer's search process without having to modify anything in AFL's search algorithm.
 
-A paper on FuzzFactory has been [accepted to OOPSLA 2019](https://2019.splashcon.org/details/splash-2019-oopsla/57/FuzzFactory-Domain-Specific-Fuzzing-with-Waypoints). FuzzFactory has been developed by [Rohan Padhye](https://cs.berkeley.edu/~rohanpadhye) and [Caroline Lemieux](https://www.carolemieux.com).
-A replication package for the experimental evaluation described in the paper is [available on Zenodo](https://doi.org/10.5281/zenodo.3364086).
+FuzzFactory has been developed by [Rohan Padhye](https://cs.berkeley.edu/~rohanpadhye) and [Caroline Lemieux](https://www.carolemieux.com) at [UC Berkeley](https://eecs.berkeley.edu). Most details are described in the following research paper:
+
+> Rohan Padhye, Caroline Lemieux, Koushik Sen, Laurent Simon, and Hayawardh Vijayakumar. 2019. FuzzFactory: Domain-Specific Fuzzing with Waypoints. Proc. ACM Program. Lang. 3, OOPSLA, Article 174 (October 2019), 29 pages. https://doi.org/10.1145/3360600
+
+Until the DOI becomes active, you can [**get the paper preprint here**](https://people.eecs.berkeley.edu/~rohanpadhye/files/fuzzfactory-oopsla19.pdf). A replication package for the experimental evaluation described in the paper is [available on Zenodo](https://doi.org/10.5281/zenodo.3364086).
 
 ## What are *Waypoints*?
 
@@ -13,8 +16,21 @@ FuzzFactory's key abstraction is that of *waypoints*: intermediate inputs that a
 
 ## How does FuzzFactory work?
 
-FuzzFactory exposes an API (see `include/waypoints.h`) between the fuzzing algorithm and the test program. The test program can provide custom domain-specific feedback from test execution as key-value pairs, and specify how such feedback should be aggregated across multiple inputs. The aggregated feedback is used to decide if a given input should be considered a waypoint. The calls to the API can be injected either by modifying a test program by hand, or by inserting appropriate instrumentation in the test program. 
+FuzzFactory exposes an API (see `include/waypoints.h`) between the fuzzing algorithm and the test program. The test program can provide custom domain-specific feedback from test execution as key-value pairs, and specify how such feedback should be aggregated across multiple inputs by choosing a *reducer function*. The aggregated feedback is used to decide if a given input should be considered a waypoint. The calls to the API can be injected either by modifying a test program by hand, or by inserting appropriate instrumentation in the test program. 
 
+## Why is FuzzFactory useful?
+
+Here is a cool example of something the authors did with FuzzFactory:
+1. Built `mem`, a fuzzer that generates inputs that maximize arguments to `malloc()` in **29 lines of code**.
+2. Built `cmp`, a fuzzer that surpasses variable-sized magic values, checksums, and other comparisons across integers, strings, and byte buffers, in **355 lines of code**.
+3. Composed `cmp`+`mem`, to build a super-fuzzer called `cmp-mem` that surpasses comparisons while simultaneously maximizing mallocs, using **a single command-line flag**.
+4. Used `cmp-mem` to find **two new bugs** in `libarchive` [[#1165](https://github.com/libarchive/libarchive/issues/1165), [#1237](https://github.com/libarchive/libarchive/issues/1237)]. Also [replicated a known allocation bug in libpng](https://github.com/google/fuzzer-test-suite/tree/b2e885706d63957a027ad98f46fbc281ffb2af9b/libpng-1.2.56), *without using any seed inputs*.
+
+The super-fuzzer (`cmp-mem`) outperforms not only AFL, but also its constituents `cmp` and `mem`, on finding these memory allocation issues:
+
+<p align="center">
+<img alt="Evaluation of FuzzFactory's cmp-mem composition" src="https://github.com/rohanpadhye/FuzzFactory/blob/master/img/eval_cmp-mem.png" height="400" />
+</p>
 
 ## Documentation and Examples
 
@@ -92,8 +108,8 @@ Now, let's fuzz the demo program using the seed file in the `seeds` subdirectory
 If you fuzzed a program that has been instrumented with `cmp`+`mem` domains, you will see the following in the AFL output before fuzzing starts:
 ```
 [+] 2 domain-specific front-end configs received
-DSF 0: Start=0x000000, End=0x010000, Size=65536, Cumulator=1
-DSF 1: Start=0x010000, End=0x010400, Size=1024, Cumulator=1
+DSF 0: Start=0x000000, End=0x010000, Size=65536, Reducer[0]=0x55c1b42d4ba0, Initial=0
+DSF 1: Start=0x010000, End=0x010400, Size=1024, Reducer[0]=0x55c1b42d4ba0, Initial=0
 ```
 
 This is an indication that the test program has registered two domain-specific feedback maps with FuzzFactory.
@@ -155,6 +171,65 @@ Fuzzing the augmented program will be similar to fuzzing the original demo progr
 
 ```
 [+] 1 domain-specific front-end configs received
-DSF 0: Start=0x000000, End=0x010000, Size=4, Cumulator=1
+DSF 0: Start=0x000000, End=0x000004, Size=4, Reducer[0]=0x55a947da28f0, Initial=0
 ```
 and the start of the AFL status screen. 
+
+### Analzying domain-specific info from saved inputs
+
+Apart from finding crashes (bugs), we are also often interested in generating inputs that optimize some domain-specific metric. For example, after fuzzing with the `perf` domain, which is an instantiation of [PerfFuzz](https://github.com/carolemieux/perffuzz) in FuzzFactory, we would like to find the maximum loop count across all saved inputs. Either for this purpose, or simply for debugging your domain-specific instrumentation, FuzzFactory provides a utility tool called `afl-showdsf` that analyzes domain-specific feedback from one or more saved inputs.
+
+Run `./afl-showdsf` without any arguments to see its usage. 
+
+**Replaying Single Input**: Run `afl-showdsf` followed by the command for running the test program along with its input, to see DSF from a single execution. From the `demo` directory referenced in the previous sections, run:
+```
+../afl-showdsf ./demo < seeds/zerozero.txt 
+```
+For instrumentation with a single dsf domain (e.g. `perf`), this will output a similar header to regular `afl-fuzz`, e.g.
+```
+[+] 1 domain-specific front-end configs received
+DSF 0: Start=0x000000, End=0x010000, Size=65536, Reducer[0]=0x55984aa72ba0, Initial=0
+Total DSF map length = 65536
+```
+along with a list of lines of the form:
+```
+dsf[K] = v
+```
+indicating that during execution, the input triggered the domain specific feedback value `v` for key `K`. Only the keys `K` for which `v` is not the initial aggregation value will be shown. 
+
+**Aggregation Across Inputs**: Run `afl-showdsf` with `-i <dir>` to execute all inputs in a directory and aggregate their domain-specific feedback using the reducer function that is registered with each domain (e.g. `MAX` for domain `perf`). From the `demo` directory, after fuzzing with `-p` for a while, run:
+```
+../afl-showdsf -i results/queue/ -- ./demo
+```
+Again, this will output a similar header to regular `afl-fuzz`, along with a list of lines of the form:
+```
+dsf[K] = v
+```
+This time, this means that over all inputs in the input directory, for key `K` in the domain-specific feedback map, the aggregated feedback value seen `v`. Only the keys `K` for which `v` is not the initial aggregation value will be shown.
+
+**Interpreting Results for Composed DSF**: When running `afl-showdsf` with a program instrumented with composed dsf, e.g. the `WAYPOINTS=cmp,mem` example above, we can separate out the dsf values for different domains based on the header output. For example, after running
+```
+../afl-showdsf -i results/queue/ -- ./demo
+```
+we will see output like
+```
+[+] 2 domain-specific front-end configs received
+DSF 0: Start=0x000000, End=0x010000, Size=65536, Reducer[0]=0x55c1b42d4ba0, Initial=0
+DSF 1: Start=0x010000, End=0x010400, Size=1024, Reducer[0]=0x55c1b42d4ba0, Initial=0
+Total DSF map length = 66560
+dsf[7109] = 30
+dsf[21658] = 32
+```
+We see two dsf values: `dsf[7109] = 30` and `dsf[21658] = 32`. The first question we want to ask is whether these values are from the `cmp` or the `mem` domain. 
+
+The information in the header helps us distinguish the domains:
+```
+DSF 0: Start=0x000000, End=0x010000, Size=65536, Reducer[0]=0x55c1b42d4ba0, Initial=0
+```
+says that all keys from `0x000000` to `0x010000`, exclusive of the last key (i.e. \[0, 65536)), belong to the first dsf (cmp). The second line,
+```
+DSF 1: Start=0x010000, End=0x010400, Size=1024, Reducer[0]=0x55c1b42d4ba0, Initial=0
+```
+says that all keys from `0x010000` to `0x010400`, exclusive of the last key (i.e. \[65536, 66560)), belong to the second dsf (mem).
+
+Thus, the two printed values `dsf[7109] = 30` and `dsf[21658] = 32` both belong to the `cmp` domain. 
