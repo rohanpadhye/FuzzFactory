@@ -1141,16 +1141,29 @@ int main(int argc, char** argv) {
   setup_dsf_cumulated();
 
   run_dir(in_dir);
+  
 
   /* Print out all the cumulated DSF values */
+  FILE* out = stdout;
+  if (out_file) {
+    out = fopen(out_file, "w");
+    if (!out) {
+      PFATAL("Could not open '%s' for writing.", out_file);
+    }
+  }
+
   for (int j = 0; j < dsf_count; j++) {
     dsf_config* dsf = &dsf_configs[j];
     for (int i = dsf->start; i < dsf->end; i++){
       u32 cumulated = dsf_cumulated[i];
       if (cumulated != dsf->initial) {
-        printf("dsf[%d] = %u\n", i, cumulated); // TODO: Print this to out_file
+        fprintf(out, "dsf[%d] = %u\n", i, cumulated);
       }
     }
+  }
+
+  if (out_file && out) {
+    fclose(out);
   }
 
   return 0;
