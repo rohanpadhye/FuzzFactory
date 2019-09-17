@@ -158,3 +158,15 @@ Fuzzing the augmented program will be similar to fuzzing the original demo progr
 DSF 0: Start=0x000000, End=0x010000, Size=4, Cumulator=1
 ```
 and the start of the AFL status screen. 
+
+### Analzying domain-specific info from saved inputs
+
+Apart from finding crashes (bugs), we are also often interested in generating inputs that optimize some domain-specific metric. For example, after fuzzing with the `perf` domain, which is an instantiation of [PerfFuzz](https://github.com/carolemieux/perffuzz) in FuzzFactory, we would like to find the maximum loop count across all saved inputs. Either for this purpose, or simply for debugging your domain-specific instrumentation, FuzzFactory provides a utility tool called `afl-showdsf` that analyzes domain-specific feedback from a bunch of saved inputs.
+
+Run `./afl-showdsf` without any arguments to see its usage. Here is an example to replay the results saved from the demo in the previous section:
+```
+./afl-showdsf -i results/queue/ -- ./demo
+```
+
+Note: The output shows the *aggregate* DSF value for each key in the DSF map, where the aggregation is performed using the domain-specific reducer function associated with each registered domain. Please read the OOPSLA paper for details or see `waypoints.h` and `reducers.h` for the API.
+```
