@@ -108,8 +108,8 @@ Now, let's fuzz the demo program using the seed file in the `seeds` subdirectory
 If you fuzzed a program that has been instrumented with `cmp`+`mem` domains, you will see the following in the AFL output before fuzzing starts:
 ```
 [+] 2 domain-specific front-end configs received
-DSF 0: Start=0x000000, End=0x010000, Size=65536, Cumulator=1
-DSF 1: Start=0x010000, End=0x010400, Size=1024, Cumulator=1
+DSF 0: Start=0x000000, End=0x010000, Size=65536, Reducer[0]=0x55c1b42d4ba0, Initial=0
+DSF 1: Start=0x010000, End=0x010400, Size=1024, Reducer[0]=0x55c1b42d4ba0, Initial=0
 ```
 
 This is an indication that the test program has registered two domain-specific feedback maps with FuzzFactory.
@@ -171,7 +171,7 @@ Fuzzing the augmented program will be similar to fuzzing the original demo progr
 
 ```
 [+] 1 domain-specific front-end configs received
-DSF 0: Start=0x000000, End=0x010000, Size=4, Cumulator=1
+DSF 0: Start=0x000000, End=0x000004, Size=4, Reducer[0]=0x55a947da28f0, Initial=0
 ```
 and the start of the AFL status screen. 
 
@@ -185,9 +185,51 @@ Run `./afl-showdsf` without any arguments to see its usage.
 ```
 ../afl-showdsf ./demo < seeds/zerozero.txt 
 ```
+For instrumentation with a single dsf domain (e.g. `perf`), this will output a similar header to regular `afl-fuzz`, e.g.
+```
+[+] 1 domain-specific front-end configs received
+DSF 0: Start=0x000000, End=0x010000, Size=65536, Reducer[0]=0x55984aa72ba0, Initial=0
+Total DSF map length = 65536
+```
+along with a list of lines of the form:
+```
+dsf[K] = v
+```
+indicating that during execution, the input triggered the domain specific feedback value `v` for key `K`. Only the keys `K` for which `v` is not the initial aggregation value will be shown. 
 
 **Aggregation Across Inputs**: Run `afl-showdsf` with `-i <dir>` to execute all inputs in a directory and aggregate their domain-specific feedback using the reducer function that is registered with each domain (e.g. `MAX` for domain `perf`). From the `demo` directory, after fuzzing with `-p` for a while, run:
 ```
 ../afl-showdsf -i results/queue/ -- ./demo
 ```
+Again, this will output a similar header to regular `afl-fuzz`, along with a list of lines of the form:
+```
+dsf[K] = v
+```
+This time, this means that over all inputs in the input directory, for key `K` in the domain-specific feedback map, the aggregated feedback value seen `v`. Only the keys `K` for which `v` is not the initial aggregation value will be shown.
 
+**Interpreting Results for Composed DSF**: When running `afl-showdsf` with a program instrumented with composed dsf, e.g. the `WAYPOINTS=cmp,mem` example above, we can separate out the dsf values for different domains based on the header output. For example, after running
+```
+../afl-showdsf -i results/queue/ -- ./demo
+```
+we will see output like
+```
+[+] 2 domain-specific front-end configs received
+DSF 0: Start=0x000000, End=0x010000, Size=65536, Reducer[0]=0x55c1b42d4ba0, Initial=0
+DSF 1: Start=0x010000, End=0x010400, Size=1024, Reducer[0]=0x55c1b42d4ba0, Initial=0
+Total DSF map length = 66560
+dsf[7109] = 30
+dsf[21658] = 32
+```
+We see two dsf values: `dsf[7109] = 30` and `dsf[21658] = 32`. The first question we want to ask is whether these values are from the `cmp` or the `mem` domain. 
+
+The information in the header helps us distinguish the domains:
+```
+DSF 0: Start=0x000000, End=0x010000, Size=65536, Reducer[0]=0x55c1b42d4ba0, Initial=0
+```
+says that all keys from `0x000000` to `0x010000`, exclusive of the last key (i.e. \[0, 65536)), belong to the first dsf (cmp). The second line,
+```
+DSF 1: Start=0x010000, End=0x010400, Size=1024, Reducer[0]=0x55c1b42d4ba0, Initial=0
+```
+says that all keys from `0x010000` to `0x010400`, exclusive of the last key (i.e. \[65536, 66560)), belong to the second dsf (mem).
+
+Thus, the two printed values `dsf[7109] = 30` and `dsf[21658] = 32` both belong to the `cmp` domain. 
