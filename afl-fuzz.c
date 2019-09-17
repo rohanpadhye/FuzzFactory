@@ -2457,7 +2457,6 @@ static u8 run_target(char** argv, u32 timeout) {
   memset(trace_bits, 0, MAP_SIZE);
   if (dsf_enabled || save_everything) { 
     memset(dsf_map, 0, dsf_len_actual * sizeof(u32));
-    memset(dsf_entry_changed, 0, dsf_len_actual * sizeof(u8));
   }
   MEM_BARRIER();
 
