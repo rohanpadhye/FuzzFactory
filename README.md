@@ -18,6 +18,19 @@ FuzzFactory's key abstraction is that of *waypoints*: intermediate inputs that a
 
 FuzzFactory exposes an API (see `include/waypoints.h`) between the fuzzing algorithm and the test program. The test program can provide custom domain-specific feedback from test execution as key-value pairs, and specify how such feedback should be aggregated across multiple inputs by choosing a *reducer function*. The aggregated feedback is used to decide if a given input should be considered a waypoint. The calls to the API can be injected either by modifying a test program by hand, or by inserting appropriate instrumentation in the test program. 
 
+## Why is FuzzFactory useful?
+
+Here is a cool example of something the authors did with FuzzFactory:
+1. Built `mem`, a fuzzer that generates inputs that maximize arguments to `malloc()` in **29 lines of code**.
+2. Built `cmp`, a fuzzer that surpasses variable-sized magic values, checksums, and other comparisons across integers, strings, and byte buffers, in **355 lines of code**.
+3. Composed `cmp`+`mem`, to build a super-fuzzer called `cmp-mem` that surpasses comparisons while simultaneously maximizing mallocs, using **a single command-line flag**.
+4. Used `cmp-mem` to find **two new bugs** in `libarchive` [[#1165](https://github.com/libarchive/libarchive/issues/1165), [#1237](https://github.com/libarchive/libarchive/issues/1237)]. Also [replicated a known allocation bug in libpng](https://github.com/google/fuzzer-test-suite/tree/b2e885706d63957a027ad98f46fbc281ffb2af9b/libpng-1.2.56), *without using any seed inputs*.
+
+The super-fuzzer (`cmp-mem`) outperforms not only AFL, but also its constituents `cmp` and `mem`, on finding these memory allocation issues:
+
+<p align="center">
+<img alt="Evaluation of FuzzFactory's cmp-mem composition" src="https://github.com/rohanpadhye/FuzzFactory/blob/master/img/eval_cmp-mem.png" height="400" />
+</p>
 
 ## Documentation and Examples
 
