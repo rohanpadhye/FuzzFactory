@@ -827,7 +827,7 @@ void run_dir(char* path) {
 
 static void show_banner(void) {
 
-  SAYF(cCYA "afl-showmap " cBRI VERSION cRST " by <lcamtuf@google.com>\n");
+  SAYF(cCYA "afl-showdsf " cBRI VERSION cRST " by <rohanpadhye@cs.berkeley.edu>\n");
 
 }
 
