@@ -169,4 +169,3 @@ Run `./afl-showdsf` without any arguments to see its usage. Here is an example t
 ```
 
 Note: The output shows the *aggregate* DSF value for each key in the DSF map, where the aggregation is performed using the domain-specific reducer function associated with each registered domain. Please read the OOPSLA paper for details or see `waypoints.h` and `reducers.h` for the API.
-```
