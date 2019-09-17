@@ -157,6 +157,7 @@ EXP_ST dsf_config dsf_configs[DSF_MAX]; /* DSF - config struct array */
 
 typedef u32 (*reducer_t)(u32, u32);    /* Signature for reducer functions */
 extern reducer_t dsf_reducers[];       /* Array of predefined reducer functions */
+extern const char* dsf_reducer_names[];/* Array of predefined reducer func names */
 
 EXP_ST u8  virgin_bits[MAP_SIZE],     /* Regions yet untouched by fuzzing */
            virgin_tmout[MAP_SIZE],    /* Bits we haven't seen in tmouts   */
@@ -2297,7 +2298,7 @@ EXP_ST void init_forkserver(char** argv) {
         int end = dsf_configs[j].end;
         int reducer = dsf_configs[j].reducer;
         int initial = dsf_configs[j].initial;
-        SAYF("DSF %d: Start=0x%06x, End=0x%06x, Size=%d, Reducer[%d]=%p, Initial=%d\n", j, start, end, end-start, reducer, dsf_reducers[reducer], initial);
+        SAYF("DSF %d: Start=0x%06x, End=0x%06x, Size=%d, Reducer[%d]=%s, Initial=%d\n", j, start, end, end-start, reducer, dsf_reducer_names[reducer], initial);
         dsf_len_actual = end;
       }
       SAYF("Total DSF map length = %d\n", dsf_len_actual);
