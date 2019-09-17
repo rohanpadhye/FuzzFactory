@@ -842,24 +842,22 @@ static void usage(u8* argv0) {
        "Required parameters:\n\n"
 
        "  -i dir        - directory containing input files \n\n"
-       "  -o file       - file to write the trace data to\n\n"
 
        "Execution control settings:\n\n"
 
        "  -t msec       - timeout for each run (none)\n"
-       "  -m megs       - memory limit for child process (%u MB)\n"
-       "  -Q            - use binary-only instrumentation (QEMU mode)\n\n"
+       "  -m megs       - memory limit for child process (%u MB)\n\n"
 
        "Other settings:\n\n"
 
+       "  -o file       - file to write the trace data to\n\n"
        "  -q            - sink program's output and don't show messages\n"
        "  -e            - show edge coverage only, ignore hit counts\n"
        "  -c            - allow core dumps\n"
 
-       "This tool displays raw tuple data captured by AFL instrumentation.\n"
-       "For additional help, consult %s/README.\n\n" cRST,
-
-       argv0, MEM_LIMIT, doc_path);
+       "This tool aggregates domain-specific feedback from a target program, \n"
+       "which is instrumented or modified to use the FuzzFactory API.\n\n" cRST,
+       argv0, MEM_LIMIT);
 
   exit(1);
 
