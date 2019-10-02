@@ -4,7 +4,7 @@
 
 FuzzFactory is an extension of [AFL](https://github.com/google/AFL) that generalizes coverage-guided fuzzing to domain-specific testing goals. FuzzFactory allows users to guide the fuzzer's search process without having to modify anything in AFL's search algorithm.
 
-FuzzFactory has been developed by [Rohan Padhye](https://cs.berkeley.edu/~rohanpadhye) and [Caroline Lemieux](https://www.carolemieux.com) at [UC Berkeley](https://eecs.berkeley.edu). Most details are described in the following research paper:
+FuzzFactory has been developed by [Rohan Padhye](https://cs.berkeley.edu/~rohanpadhye), [Caroline Lemieux](https://www.carolemieux.com), and [Koushik Sen](https://people.eecs.berkeley.edu/~ksen/) at [UC Berkeley](https://eecs.berkeley.edu). Most details are described in the following research paper:
 
 > Rohan Padhye, Caroline Lemieux, Koushik Sen, Laurent Simon, and Hayawardh Vijayakumar. 2019. FuzzFactory: Domain-Specific Fuzzing with Waypoints. Proc. ACM Program. Lang. 3, OOPSLA, Article 174 (October 2019), 29 pages. https://doi.org/10.1145/3360600
 
