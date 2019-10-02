@@ -70,10 +70,13 @@ afl-as: afl-as.c afl-as.h $(COMM_HDR) | test_x86
 	ln -sf afl-as as
 
 reducers.o: reducers.c $(COMM_HDR)
-	$(CC) $(CFLAGS) -c $^ 
+	$(CC) $(CFLAGS) -c $^
 
 afl-fuzz.o: afl-fuzz.c $(COMM_HDR)
 	$(CC) $(CFLAGS) -c $^ 
+
+afl-showdsf.o: afl-showdsf.c $(COMM_HDR)
+	$(CC) $(CFLAGS) -c $^
 
 afl-fuzz: afl-fuzz.o reducers.o | test_x86
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
@@ -81,7 +84,7 @@ afl-fuzz: afl-fuzz.o reducers.o | test_x86
 afl-showmap: afl-showmap.c $(COMM_HDR) | test_x86
 	$(CC) $(CFLAGS) $@.c -o $@ $(LDFLAGS)
 
-afl-showdsf: afl-showdsf.c reducers.o $(COMM_HDR) | test_x86
+afl-showdsf: afl-showdsf.o reducers.o | test_x86
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 afl-tmin: afl-tmin.c $(COMM_HDR) | test_x86
