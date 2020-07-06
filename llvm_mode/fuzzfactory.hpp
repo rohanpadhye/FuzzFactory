@@ -39,8 +39,8 @@ public:
 
     /** Instatiates a new domain and immediately registered the instrumentation pass with LLVM */
     RegisterDomain() : ModulePass(RegisterDomain<D>::ID) {
-        RegisterStandardPasses RegisterFuzzFactoryPass(PassManagerBuilder::EP_OptimizerLast, RegisterDomain<D>::registerPass);
-        RegisterStandardPasses RegisterFuzzFactoryPass0(PassManagerBuilder::EP_EnabledOnOptLevel0, RegisterDomain<D>::registerPass);    
+        static RegisterStandardPasses RegisterFuzzFactoryPass(PassManagerBuilder::EP_OptimizerLast, RegisterDomain<D>::registerPass);
+        static RegisterStandardPasses RegisterFuzzFactoryPass0(PassManagerBuilder::EP_EnabledOnOptLevel0, RegisterDomain<D>::registerPass);
     }
 
     /* Runs this instrumentation pass on a module */
