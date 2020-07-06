@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include "llvm/IR/DebugInfoMetadata.h"
+#include "llvm/Support/CommandLine.h"
 #include "fuzzfactory.hpp"
 
 using namespace fuzzfactory;
