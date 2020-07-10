@@ -72,11 +72,26 @@ private:
   GlobalVariable *InMainLoop;
   Function* WaypointHit;
   std::vector<FileAndLine> target_locations;
-    
+  enum LoopMode {AFL, PERSISTENT, LIBFUZZER};
+  LoopMode loop_mode;
+  std::string main_name = "main";
 
 
 public:
-    IncrementalFuzzingFeedback(Module& M) : DomainFeedback<IncrementalFuzzingFeedback>(M, "__afl_diff_dsf") { 
+    IncrementalFuzzingFeedback(Module& M) : DomainFeedback<IncrementalFuzzingFeedback>(M, "__afl_diff_dsf") {
+
+        /// IDEA: use lookup table to check whether this is in persistent mode
+
+       if (M.getFunction("LLVMFuzzerTestOneInput")){
+           loop_mode = LIBFUZZER;
+           main_name = "LLVMFuzzerTestOneInput";
+       } else if (M.getFunction("__afl_persistent_loop")){
+           loop_mode = PERSISTENT;
+           main_name = "__afl_persistent_loop";
+       } else {
+           loop_mode = AFL;
+           main_name = "main";
+       }
 
       if (!populate_target_locations(&target_locations)) { 
         errs() << "Could not populate target locations\n";
@@ -100,31 +115,48 @@ public:
 
 
     void visitFunction (Function& F) {
+
         if (target_locations.empty()) {
             return;
         }
           
-        bool at_top_of_llvmfuzz = false; 
+        bool at_top_of_main = false; 
         if (F.hasName()){
-          if (F.getName() == "LLVMFuzzerTestOneInput") {
-            at_top_of_llvmfuzz = true;
+          if (F.getName() == main_name && F.getInstructionCount() > 0) {
+            at_top_of_main = true;
             for (auto &BB : F) {
-              for (auto &I : BB) {
-                if (ReturnInst *ri = dyn_cast<ReturnInst>(&I)) {
-                  auto irb = insert_before(I);
-                  irb.CreateStore(ConstantInt::get(Int32Ty, 0), InMainLoop);
+                for (auto &I : BB) {
+                    if (ReturnInst *ri = dyn_cast<ReturnInst>(&I)) {
+                        auto irb = insert_before(I);
+                        irb.CreateStore(ConstantInt::get(Int32Ty, 0), InMainLoop);
+                    }
                 }
-              }
             }
           }
         }
 
-        if (at_top_of_llvmfuzz) {
-           BasicBlock::iterator IP = F.begin()->getFirstInsertionPt();
-           auto irb = insert_before(*IP);
+        if (at_top_of_main) {
+           BasicBlock& bb = *F.begin();
+           auto irb = insert_before(bb);
            irb.CreateStore(getConst(0), DiffHit);
            irb.CreateStore(getConst(1), InMainLoop);
-           at_top_of_llvmfuzz = false;
+           at_top_of_main = false;
+        }
+    }
+
+    /*
+     * Populates the in_main
+     */
+    void add_main_hit_in_loop(BasicBlock & bb){
+        for (auto& instr: bb.getInstList()) {
+            if (auto* callinst = llvm::dyn_cast<llvm::CallInst>(&instr)){
+                Function * callee = callinst->getCalledFunction();
+                if (callee && callee->getName() == main_name){
+                    auto irb = IRBuilder<>(callinst);
+                    irb.CreateStore(getConst(0), DiffHit);
+                    irb.CreateStore(getConst(1), InMainLoop);
+                }
+            }
         }
     }
 
@@ -133,6 +165,10 @@ public:
             return;
         }
         auto irb = insert_before(bb); // Get a handle to the LLVM IR Builder at this point
+
+        if (loop_mode == PERSISTENT){
+            add_main_hit_in_loop(bb);
+        }
         
         // Assign hits_diff = 1 if this basic block hits the diff
         if (hits_target(bb, target_locations)) {
