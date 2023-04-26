@@ -2457,6 +2457,15 @@ static u8 run_target(char** argv, u32 timeout) {
   memset(trace_bits, 0, MAP_SIZE);
   if (dsf_enabled || save_everything) { 
     memset(dsf_map, 0, dsf_len_actual * sizeof(u32));
+    for (int i = 0; i < dsf_count; i++) {
+      u32 dsf_initial = dsf_configs[i].initial;
+      if (dsf_initial == 0) continue;
+      int dsf_start = dsf_configs[i].start;
+      int dsf_end = dsf_configs[i].end;
+      for (int j = dsf_start; j < dsf_end; j++) {
+        dsf_map[j] = dsf_initial;
+      }
+    }
   }
   MEM_BARRIER();
 
